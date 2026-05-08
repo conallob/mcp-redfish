@@ -107,5 +107,3 @@ brews:
       system "#{bin}/mcp-redfish", "--version"
     install: |
       bin.install "mcp-redfish"
-    extra_install: |
-      generate_completions_from_executable(bin/"mcp-redfish", "--completions")
