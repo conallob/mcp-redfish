@@ -11,8 +11,9 @@ import (
 )
 
 // Register adds all Redfish tools to s.
+// sol may be nil; console tools will report "not configured" in that case.
 // When readOnly is true, tools that modify state are omitted.
-func Register(s *server.MCPServer, c *redfish.Client, readOnly bool) {
+func Register(s *server.MCPServer, c *redfish.Client, sol *redfish.SOLClient, readOnly bool) {
 	// --- Read-only tools ---
 
 	s.AddTool(mcp.NewTool("redfish_get_service_root",
@@ -93,6 +94,19 @@ func Register(s *server.MCPServer, c *redfish.Client, readOnly bool) {
 			mcp.Description("System ID or OData path. Omit to use the first system."),
 		),
 	), handleGetBios(c))
+
+	// --- Serial console tools (always registered; return "not configured" when sol is nil) ---
+
+	s.AddTool(mcp.NewTool("redfish_get_console_status",
+		mcp.WithDescription("Show the current Serial-over-LAN connection state and how many lines are buffered."),
+	), handleGetConsoleStatus(sol))
+
+	s.AddTool(mcp.NewTool("redfish_get_console_output",
+		mcp.WithDescription("Return recent Serial-over-LAN console output buffered since the server started."),
+		mcp.WithNumber("limit",
+			mcp.Description("Maximum number of lines to return (default: 100)."),
+		),
+	), handleGetConsoleOutput(sol))
 
 	if readOnly {
 		return
