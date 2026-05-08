@@ -92,6 +92,7 @@ docker_manifests:
 
 brews:
   - name: mcp-redfish
+    directory: Formula
     repository:
       owner: conallob
       name: homebrew-tap
