@@ -43,6 +43,7 @@ jobs:
         with:
           version: v2.5.0
           args: --timeout=5m
+          verify: false
 
   build:
     name: Build
