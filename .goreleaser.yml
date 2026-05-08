@@ -1,0 +1,111 @@
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+    - go generate ./...
+
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ignore:
+      - goos: windows
+        goarch: arm64
+    ldflags:
+      - -s -w -X main.version={{.Version}}
+    binary: mcp-redfish
+
+archives:
+  - formats: [tar.gz]
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    files:
+      - README.md
+      - LICENSE
+
+checksum:
+  name_template: checksums.txt
+
+changelog:
+  sort: asc
+  use: github
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - "Merge pull request"
+      - "Merge branch"
+
+dockers:
+  - image_templates:
+      - "ghcr.io/conallob/mcp-redfish:{{ .Tag }}-amd64"
+      - "ghcr.io/conallob/mcp-redfish:latest-amd64"
+    goarch: amd64
+    dockerfile: Dockerfile
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/amd64"
+      - "--label=org.opencontainers.image.title={{ .ProjectName }}"
+      - "--label=org.opencontainers.image.description=Local MCP server for interacting with server BMCs via the Redfish API"
+      - "--label=org.opencontainers.image.url=https://github.com/conallob/mcp-redfish"
+      - "--label=org.opencontainers.image.source=https://github.com/conallob/mcp-redfish"
+      - "--label=org.opencontainers.image.version={{ .Version }}"
+      - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
+      - "--label=org.opencontainers.image.licenses=BSD-3-Clause"
+
+  - image_templates:
+      - "ghcr.io/conallob/mcp-redfish:{{ .Tag }}-arm64"
+      - "ghcr.io/conallob/mcp-redfish:latest-arm64"
+    goarch: arm64
+    dockerfile: Dockerfile
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/arm64"
+      - "--label=org.opencontainers.image.title={{ .ProjectName }}"
+      - "--label=org.opencontainers.image.description=Local MCP server for interacting with server BMCs via the Redfish API"
+      - "--label=org.opencontainers.image.url=https://github.com/conallob/mcp-redfish"
+      - "--label=org.opencontainers.image.source=https://github.com/conallob/mcp-redfish"
+      - "--label=org.opencontainers.image.version={{ .Version }}"
+      - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
+      - "--label=org.opencontainers.image.licenses=BSD-3-Clause"
+
+docker_manifests:
+  - name_template: "ghcr.io/conallob/mcp-redfish:{{ .Tag }}"
+    image_templates:
+      - "ghcr.io/conallob/mcp-redfish:{{ .Tag }}-amd64"
+      - "ghcr.io/conallob/mcp-redfish:{{ .Tag }}-arm64"
+
+  - name_template: "ghcr.io/conallob/mcp-redfish:latest"
+    image_templates:
+      - "ghcr.io/conallob/mcp-redfish:latest-amd64"
+      - "ghcr.io/conallob/mcp-redfish:latest-arm64"
+
+brews:
+  - name: mcp-redfish
+    repository:
+      owner: conallob
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    commit_author:
+      name: goreleaserbot
+      email: bot@goreleaser.com
+    commit_msg_template: "chore: brew formula update for {{ .ProjectName }} version {{ .Tag }}"
+    homepage: "https://github.com/conallob/mcp-redfish"
+    description: "Local MCP server for interacting with server BMCs via the Redfish API"
+    license: "BSD-3-Clause"
+    test: |
+      system "#{bin}/mcp-redfish", "--version"
+    install: |
+      bin.install "mcp-redfish"
+    extra_install: |
+      generate_completions_from_executable(bin/"mcp-redfish", "--completions")

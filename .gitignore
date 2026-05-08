@@ -1,0 +1,19 @@
+# Build output
+mcp-redfish
+mcp-redfish.exe
+dist/
+
+# Go
+*.test
+*.out
+coverage.txt
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
