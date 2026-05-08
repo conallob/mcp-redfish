@@ -7,10 +7,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/conallob/mcp-redfish/internal/redfish"
-	"github.com/conallob/mcp-redfish/internal/tools"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
+
+	"github.com/conallob/mcp-redfish/internal/redfish"
+	"github.com/conallob/mcp-redfish/internal/tools"
 )
 
 // fixtures is a shared set of mock Redfish responses for tool tests.

@@ -6,9 +6,10 @@ import (
 	"log"
 	"os"
 
+	"github.com/mark3labs/mcp-go/server"
+
 	"github.com/conallob/mcp-redfish/internal/redfish"
 	"github.com/conallob/mcp-redfish/internal/tools"
-	"github.com/mark3labs/mcp-go/server"
 )
 
 // version is set at build time via -ldflags "-X main.version=<ver>".

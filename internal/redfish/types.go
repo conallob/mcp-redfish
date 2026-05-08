@@ -73,33 +73,33 @@ type SystemLinks struct {
 
 // ComputerSystem represents a Redfish managed server.
 type ComputerSystem struct {
-	ODataID               string           `json:"@odata.id"`
-	ID                    string           `json:"Id"`
-	Name                  string           `json:"Name"`
-	Description           string           `json:"Description"`
-	SystemType            string           `json:"SystemType"`
-	Manufacturer          string           `json:"Manufacturer"`
-	Model                 string           `json:"Model"`
-	SKU                   string           `json:"SKU"`
-	SerialNumber          string           `json:"SerialNumber"`
-	PartNumber            string           `json:"PartNumber"`
-	HostName              string           `json:"HostName"`
-	Status                Status           `json:"Status"`
-	IndicatorLED          string           `json:"IndicatorLED"`
-	PowerState            string           `json:"PowerState"`
-	BIOSVersion           string           `json:"BiosVersion"`
-	ProcessorSummary      ProcessorSummary `json:"ProcessorSummary"`
-	MemorySummary         MemorySummary    `json:"MemorySummary"`
-	Boot                  Boot             `json:"Boot"`
-	Links                 SystemLinks      `json:"Links"`
-	Actions               SystemActions    `json:"Actions"`
-	Processors            ODataLink        `json:"Processors"`
-	Memory                ODataLink        `json:"Memory"`
-	Storage               ODataLink        `json:"Storage"`
-	NetworkInterfaces     ODataLink        `json:"NetworkInterfaces"`
-	EthernetInterfaces    ODataLink        `json:"EthernetInterfaces"`
-	LogServices           ODataLink        `json:"LogServices"`
-	Bios                  ODataLink        `json:"Bios"`
+	ODataID            string           `json:"@odata.id"`
+	ID                 string           `json:"Id"`
+	Name               string           `json:"Name"`
+	Description        string           `json:"Description"`
+	SystemType         string           `json:"SystemType"`
+	Manufacturer       string           `json:"Manufacturer"`
+	Model              string           `json:"Model"`
+	SKU                string           `json:"SKU"`
+	SerialNumber       string           `json:"SerialNumber"`
+	PartNumber         string           `json:"PartNumber"`
+	HostName           string           `json:"HostName"`
+	Status             Status           `json:"Status"`
+	IndicatorLED       string           `json:"IndicatorLED"`
+	PowerState         string           `json:"PowerState"`
+	BIOSVersion        string           `json:"BiosVersion"`
+	ProcessorSummary   ProcessorSummary `json:"ProcessorSummary"`
+	MemorySummary      MemorySummary    `json:"MemorySummary"`
+	Boot               Boot             `json:"Boot"`
+	Links              SystemLinks      `json:"Links"`
+	Actions            SystemActions    `json:"Actions"`
+	Processors         ODataLink        `json:"Processors"`
+	Memory             ODataLink        `json:"Memory"`
+	Storage            ODataLink        `json:"Storage"`
+	NetworkInterfaces  ODataLink        `json:"NetworkInterfaces"`
+	EthernetInterfaces ODataLink        `json:"EthernetInterfaces"`
+	LogServices        ODataLink        `json:"LogServices"`
+	Bios               ODataLink        `json:"Bios"`
 }
 
 // Processor represents a CPU installed in the system.
@@ -121,18 +121,18 @@ type Processor struct {
 
 // MemoryModule represents a single DIMM or memory device.
 type MemoryModule struct {
-	ODataID          string `json:"@odata.id"`
-	ID               string `json:"Id"`
-	Name             string `json:"Name"`
-	MemoryType       string `json:"MemoryType"`
-	MemoryDeviceType string `json:"MemoryDeviceType"`
-	CapacityMiB      int    `json:"CapacityMiB"`
-	OperatingSpeedMhz int   `json:"OperatingSpeedMhz"`
-	Manufacturer     string `json:"Manufacturer"`
-	SerialNumber     string `json:"SerialNumber"`
-	PartNumber       string `json:"PartNumber"`
-	DeviceLocator    string `json:"DeviceLocator"`
-	Status           Status `json:"Status"`
+	ODataID           string `json:"@odata.id"`
+	ID                string `json:"Id"`
+	Name              string `json:"Name"`
+	MemoryType        string `json:"MemoryType"`
+	MemoryDeviceType  string `json:"MemoryDeviceType"`
+	CapacityMiB       int    `json:"CapacityMiB"`
+	OperatingSpeedMhz int    `json:"OperatingSpeedMhz"`
+	Manufacturer      string `json:"Manufacturer"`
+	SerialNumber      string `json:"SerialNumber"`
+	PartNumber        string `json:"PartNumber"`
+	DeviceLocator     string `json:"DeviceLocator"`
+	Status            Status `json:"Status"`
 }
 
 // StorageControllerSummary describes a storage controller.
@@ -172,11 +172,11 @@ type Drive struct {
 
 // NetworkInterface represents a NIC or network adapter.
 type NetworkInterface struct {
-	ODataID     string    `json:"@odata.id"`
-	ID          string    `json:"Id"`
-	Name        string    `json:"Name"`
-	Description string    `json:"Description"`
-	Status      Status    `json:"Status"`
+	ODataID     string `json:"@odata.id"`
+	ID          string `json:"Id"`
+	Name        string `json:"Name"`
+	Description string `json:"Description"`
+	Status      Status `json:"Status"`
 }
 
 // Temperature is a single thermal sensor reading.
@@ -263,16 +263,16 @@ type Power struct {
 
 // LogEntry represents a single entry in a system event log.
 type LogEntry struct {
-	ODataID     string `json:"@odata.id"`
-	ID          string `json:"Id"`
-	Name        string `json:"Name"`
-	Created     string `json:"Created"`
-	Severity    string `json:"Severity"`
-	Message     string `json:"Message"`
-	MessageID   string `json:"MessageId"`
-	EntryType   string `json:"EntryType"`
-	SensorType  string `json:"SensorType"`
-	SensorNumber int   `json:"SensorNumber"`
+	ODataID      string `json:"@odata.id"`
+	ID           string `json:"Id"`
+	Name         string `json:"Name"`
+	Created      string `json:"Created"`
+	Severity     string `json:"Severity"`
+	Message      string `json:"Message"`
+	MessageID    string `json:"MessageId"`
+	EntryType    string `json:"EntryType"`
+	SensorType   string `json:"SensorType"`
+	SensorNumber int    `json:"SensorNumber"`
 }
 
 // ManagerActions lists actions available on a Manager.
@@ -282,23 +282,23 @@ type ManagerActions struct {
 
 // Manager represents a BMC or management controller.
 type Manager struct {
-	ODataID               string         `json:"@odata.id"`
-	ID                    string         `json:"Id"`
-	Name                  string         `json:"Name"`
-	Description           string         `json:"Description"`
-	ManagerType           string         `json:"ManagerType"`
-	Manufacturer          string         `json:"Manufacturer"`
-	Model                 string         `json:"Model"`
-	FirmwareVersion       string         `json:"FirmwareVersion"`
-	UUID                  string         `json:"UUID"`
-	Status                Status         `json:"Status"`
-	PowerState            string         `json:"PowerState"`
-	DateTime              string         `json:"DateTime"`
-	DateTimeLocalOffset   string         `json:"DateTimeLocalOffset"`
-	EthernetInterfaces    ODataLink      `json:"EthernetInterfaces"`
-	NetworkProtocol       ODataLink      `json:"NetworkProtocol"`
-	LogServices           ODataLink      `json:"LogServices"`
-	Actions               ManagerActions `json:"Actions"`
+	ODataID             string         `json:"@odata.id"`
+	ID                  string         `json:"Id"`
+	Name                string         `json:"Name"`
+	Description         string         `json:"Description"`
+	ManagerType         string         `json:"ManagerType"`
+	Manufacturer        string         `json:"Manufacturer"`
+	Model               string         `json:"Model"`
+	FirmwareVersion     string         `json:"FirmwareVersion"`
+	UUID                string         `json:"UUID"`
+	Status              Status         `json:"Status"`
+	PowerState          string         `json:"PowerState"`
+	DateTime            string         `json:"DateTime"`
+	DateTimeLocalOffset string         `json:"DateTimeLocalOffset"`
+	EthernetInterfaces  ODataLink      `json:"EthernetInterfaces"`
+	NetworkProtocol     ODataLink      `json:"NetworkProtocol"`
+	LogServices         ODataLink      `json:"LogServices"`
+	Actions             ManagerActions `json:"Actions"`
 }
 
 // Bios represents BIOS/UEFI firmware settings.

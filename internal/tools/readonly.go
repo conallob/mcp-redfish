@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/conallob/mcp-redfish/internal/redfish"
 	"github.com/mark3labs/mcp-go/mcp"
+
+	"github.com/conallob/mcp-redfish/internal/redfish"
 )
 
 func handleGetServiceRoot(c *redfish.Client) func(context.Context, mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	return func(_ context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		sr, err := c.GetServiceRoot()
+	return func(ctx context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		sr, err := c.GetServiceRoot(ctx)
 		if err != nil {
 			return mcp.NewToolResultErrorf("failed to get service root: %v", err), nil
 		}
@@ -34,8 +35,8 @@ func handleGetServiceRoot(c *redfish.Client) func(context.Context, mcp.CallToolR
 }
 
 func handleListSystems(c *redfish.Client) func(context.Context, mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	return func(_ context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		systems, err := c.ListSystems()
+	return func(ctx context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		systems, err := c.ListSystems(ctx)
 		if err != nil {
 			return mcp.NewToolResultErrorf("failed to list systems: %v", err), nil
 		}
@@ -53,9 +54,9 @@ func handleListSystems(c *redfish.Client) func(context.Context, mcp.CallToolRequ
 }
 
 func handleGetSystem(c *redfish.Client) func(context.Context, mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	return func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	return func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		systemID := req.GetString("system_id", "")
-		sys, err := c.GetSystem(systemID)
+		sys, err := c.GetSystem(ctx, systemID)
 		if err != nil {
 			return mcp.NewToolResultErrorf("failed to get system: %v", err), nil
 		}
@@ -89,9 +90,9 @@ func handleGetSystem(c *redfish.Client) func(context.Context, mcp.CallToolReques
 }
 
 func handleGetProcessors(c *redfish.Client) func(context.Context, mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	return func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	return func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		systemID := req.GetString("system_id", "")
-		procs, err := c.GetProcessors(systemID)
+		procs, err := c.GetProcessors(ctx, systemID)
 		if err != nil {
 			return mcp.NewToolResultErrorf("failed to get processors: %v", err), nil
 		}
@@ -117,9 +118,9 @@ func handleGetProcessors(c *redfish.Client) func(context.Context, mcp.CallToolRe
 }
 
 func handleGetMemory(c *redfish.Client) func(context.Context, mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	return func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	return func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		systemID := req.GetString("system_id", "")
-		modules, err := c.GetMemory(systemID)
+		modules, err := c.GetMemory(ctx, systemID)
 		if err != nil {
 			return mcp.NewToolResultErrorf("failed to get memory: %v", err), nil
 		}
@@ -155,9 +156,9 @@ func handleGetMemory(c *redfish.Client) func(context.Context, mcp.CallToolReques
 }
 
 func handleGetStorage(c *redfish.Client) func(context.Context, mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	return func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	return func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		systemID := req.GetString("system_id", "")
-		controllers, err := c.GetStorage(systemID)
+		controllers, err := c.GetStorage(ctx, systemID)
 		if err != nil {
 			return mcp.NewToolResultErrorf("failed to get storage: %v", err), nil
 		}
@@ -179,7 +180,7 @@ func handleGetStorage(c *redfish.Client) func(context.Context, mcp.CallToolReque
 			}
 			fmt.Fprintf(&sb, "    Drives (%d):\n", len(sc.Drives))
 			for _, d := range sc.Drives {
-				drive, err := c.GetDrive(d.ODataID)
+				drive, err := c.GetDrive(ctx, d.ODataID)
 				if err != nil {
 					fmt.Fprintf(&sb, "      - %s (error: %v)\n", d.ODataID, err)
 					continue
@@ -196,9 +197,9 @@ func handleGetStorage(c *redfish.Client) func(context.Context, mcp.CallToolReque
 }
 
 func handleGetNetworkInterfaces(c *redfish.Client) func(context.Context, mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	return func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	return func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		systemID := req.GetString("system_id", "")
-		nics, err := c.GetNetworkInterfaces(systemID)
+		nics, err := c.GetNetworkInterfaces(ctx, systemID)
 		if err != nil {
 			return mcp.NewToolResultErrorf("failed to get network interfaces: %v", err), nil
 		}
@@ -219,8 +220,8 @@ func handleGetNetworkInterfaces(c *redfish.Client) func(context.Context, mcp.Cal
 }
 
 func handleGetThermal(c *redfish.Client) func(context.Context, mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	return func(_ context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		thermal, err := c.GetThermal()
+	return func(ctx context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		thermal, err := c.GetThermal(ctx)
 		if err != nil {
 			return mcp.NewToolResultErrorf("failed to get thermal data: %v", err), nil
 		}
@@ -250,8 +251,8 @@ func handleGetThermal(c *redfish.Client) func(context.Context, mcp.CallToolReque
 }
 
 func handleGetPower(c *redfish.Client) func(context.Context, mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	return func(_ context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		power, err := c.GetPower()
+	return func(ctx context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		power, err := c.GetPower(ctx)
 		if err != nil {
 			return mcp.NewToolResultErrorf("failed to get power data: %v", err), nil
 		}
@@ -294,10 +295,10 @@ func handleGetPower(c *redfish.Client) func(context.Context, mcp.CallToolRequest
 }
 
 func handleGetEventLog(c *redfish.Client) func(context.Context, mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	return func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	return func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		systemID := req.GetString("system_id", "")
 		limit := req.GetInt("limit", 50)
-		entries, err := c.GetEventLog(systemID, limit)
+		entries, err := c.GetEventLog(ctx, systemID, limit)
 		if err != nil {
 			return mcp.NewToolResultErrorf("failed to get event log: %v", err), nil
 		}
@@ -315,8 +316,8 @@ func handleGetEventLog(c *redfish.Client) func(context.Context, mcp.CallToolRequ
 }
 
 func handleListManagers(c *redfish.Client) func(context.Context, mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	return func(_ context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		managers, err := c.ListManagers()
+	return func(ctx context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		managers, err := c.ListManagers(ctx)
 		if err != nil {
 			return mcp.NewToolResultErrorf("failed to list managers: %v", err), nil
 		}
@@ -335,9 +336,9 @@ func handleListManagers(c *redfish.Client) func(context.Context, mcp.CallToolReq
 }
 
 func handleGetManager(c *redfish.Client) func(context.Context, mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	return func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	return func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		managerID := req.GetString("manager_id", "")
-		mgr, err := c.GetManager(managerID)
+		mgr, err := c.GetManager(ctx, managerID)
 		if err != nil {
 			return mcp.NewToolResultErrorf("failed to get manager: %v", err), nil
 		}
@@ -363,9 +364,9 @@ func handleGetManager(c *redfish.Client) func(context.Context, mcp.CallToolReque
 }
 
 func handleGetBios(c *redfish.Client) func(context.Context, mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	return func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	return func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		systemID := req.GetString("system_id", "")
-		bios, err := c.GetBios(systemID)
+		bios, err := c.GetBios(ctx, systemID)
 		if err != nil {
 			return mcp.NewToolResultErrorf("failed to get BIOS: %v", err), nil
 		}

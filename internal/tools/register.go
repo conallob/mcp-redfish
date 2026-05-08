@@ -4,9 +4,10 @@
 package tools
 
 import (
-	"github.com/conallob/mcp-redfish/internal/redfish"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
+
+	"github.com/conallob/mcp-redfish/internal/redfish"
 )
 
 // Register adds all Redfish tools to s.

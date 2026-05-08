@@ -1,12 +1,15 @@
 package redfish_test
 
 import (
+	"context"
 	"testing"
 )
 
+var ctx = context.Background()
+
 func TestGetServiceRoot(t *testing.T) {
-	_, client := newTestServer(t)
-	sr, err := client.GetServiceRoot()
+	client := newTestServer(t)
+	sr, err := client.GetServiceRoot(ctx)
 	if err != nil {
 		t.Fatalf("GetServiceRoot() error: %v", err)
 	}
@@ -19,8 +22,8 @@ func TestGetServiceRoot(t *testing.T) {
 }
 
 func TestListSystems(t *testing.T) {
-	_, client := newTestServer(t)
-	systems, err := client.ListSystems()
+	client := newTestServer(t)
+	systems, err := client.ListSystems(ctx)
 	if err != nil {
 		t.Fatalf("ListSystems() error: %v", err)
 	}
@@ -33,8 +36,8 @@ func TestListSystems(t *testing.T) {
 }
 
 func TestGetSystem_DefaultsToFirst(t *testing.T) {
-	_, client := newTestServer(t)
-	sys, err := client.GetSystem("")
+	client := newTestServer(t)
+	sys, err := client.GetSystem(ctx, "")
 	if err != nil {
 		t.Fatalf("GetSystem(\"\") error: %v", err)
 	}
@@ -44,8 +47,8 @@ func TestGetSystem_DefaultsToFirst(t *testing.T) {
 }
 
 func TestGetSystem_ByID(t *testing.T) {
-	_, client := newTestServer(t)
-	sys, err := client.GetSystem("1")
+	client := newTestServer(t)
+	sys, err := client.GetSystem(ctx, "1")
 	if err != nil {
 		t.Fatalf("GetSystem(\"1\") error: %v", err)
 	}
@@ -55,8 +58,8 @@ func TestGetSystem_ByID(t *testing.T) {
 }
 
 func TestGetProcessors(t *testing.T) {
-	_, client := newTestServer(t)
-	procs, err := client.GetProcessors("")
+	client := newTestServer(t)
+	procs, err := client.GetProcessors(ctx, "")
 	if err != nil {
 		t.Fatalf("GetProcessors() error: %v", err)
 	}
@@ -72,8 +75,8 @@ func TestGetProcessors(t *testing.T) {
 }
 
 func TestGetMemory(t *testing.T) {
-	_, client := newTestServer(t)
-	mods, err := client.GetMemory("")
+	client := newTestServer(t)
+	mods, err := client.GetMemory(ctx, "")
 	if err != nil {
 		t.Fatalf("GetMemory() error: %v", err)
 	}
@@ -86,8 +89,8 @@ func TestGetMemory(t *testing.T) {
 }
 
 func TestGetStorage(t *testing.T) {
-	_, client := newTestServer(t)
-	controllers, err := client.GetStorage("")
+	client := newTestServer(t)
+	controllers, err := client.GetStorage(ctx, "")
 	if err != nil {
 		t.Fatalf("GetStorage() error: %v", err)
 	}
@@ -100,8 +103,8 @@ func TestGetStorage(t *testing.T) {
 }
 
 func TestGetNetworkInterfaces(t *testing.T) {
-	_, client := newTestServer(t)
-	nics, err := client.GetNetworkInterfaces("")
+	client := newTestServer(t)
+	nics, err := client.GetNetworkInterfaces(ctx, "")
 	if err != nil {
 		t.Fatalf("GetNetworkInterfaces() error: %v", err)
 	}
@@ -114,8 +117,8 @@ func TestGetNetworkInterfaces(t *testing.T) {
 }
 
 func TestGetThermal(t *testing.T) {
-	_, client := newTestServer(t)
-	thermal, err := client.GetThermal()
+	client := newTestServer(t)
+	thermal, err := client.GetThermal(ctx)
 	if err != nil {
 		t.Fatalf("GetThermal() error: %v", err)
 	}
@@ -131,8 +134,8 @@ func TestGetThermal(t *testing.T) {
 }
 
 func TestGetPower(t *testing.T) {
-	_, client := newTestServer(t)
-	power, err := client.GetPower()
+	client := newTestServer(t)
+	power, err := client.GetPower(ctx)
 	if err != nil {
 		t.Fatalf("GetPower() error: %v", err)
 	}
@@ -145,8 +148,8 @@ func TestGetPower(t *testing.T) {
 }
 
 func TestGetEventLog(t *testing.T) {
-	_, client := newTestServer(t)
-	entries, err := client.GetEventLog("", 0)
+	client := newTestServer(t)
+	entries, err := client.GetEventLog(ctx, "", 0)
 	if err != nil {
 		t.Fatalf("GetEventLog() error: %v", err)
 	}
@@ -156,8 +159,8 @@ func TestGetEventLog(t *testing.T) {
 }
 
 func TestGetEventLog_Limit(t *testing.T) {
-	_, client := newTestServer(t)
-	entries, err := client.GetEventLog("", 1)
+	client := newTestServer(t)
+	entries, err := client.GetEventLog(ctx, "", 1)
 	if err != nil {
 		t.Fatalf("GetEventLog() error: %v", err)
 	}
@@ -167,8 +170,8 @@ func TestGetEventLog_Limit(t *testing.T) {
 }
 
 func TestListManagers(t *testing.T) {
-	_, client := newTestServer(t)
-	mgrs, err := client.ListManagers()
+	client := newTestServer(t)
+	mgrs, err := client.ListManagers(ctx)
 	if err != nil {
 		t.Fatalf("ListManagers() error: %v", err)
 	}
@@ -181,8 +184,8 @@ func TestListManagers(t *testing.T) {
 }
 
 func TestGetManager_DefaultsToFirst(t *testing.T) {
-	_, client := newTestServer(t)
-	mgr, err := client.GetManager("")
+	client := newTestServer(t)
+	mgr, err := client.GetManager(ctx, "")
 	if err != nil {
 		t.Fatalf("GetManager(\"\") error: %v", err)
 	}
@@ -192,8 +195,8 @@ func TestGetManager_DefaultsToFirst(t *testing.T) {
 }
 
 func TestGetBios(t *testing.T) {
-	_, client := newTestServer(t)
-	bios, err := client.GetBios("")
+	client := newTestServer(t)
+	bios, err := client.GetBios(ctx, "")
 	if err != nil {
 		t.Fatalf("GetBios() error: %v", err)
 	}
@@ -203,38 +206,36 @@ func TestGetBios(t *testing.T) {
 }
 
 func TestResetSystem(t *testing.T) {
-	_, client := newTestServer(t)
-	if err := client.ResetSystem("", "GracefulShutdown"); err != nil {
+	client := newTestServer(t)
+	if err := client.ResetSystem(ctx, "", "GracefulShutdown"); err != nil {
 		t.Fatalf("ResetSystem() error: %v", err)
 	}
 }
 
 func TestSetIndicatorLED(t *testing.T) {
-	_, client := newTestServer(t)
-	if err := client.SetIndicatorLED("", "Blinking"); err != nil {
+	client := newTestServer(t)
+	if err := client.SetIndicatorLED(ctx, "", "Blinking"); err != nil {
 		t.Fatalf("SetIndicatorLED() error: %v", err)
 	}
 }
 
 func TestClearEventLog(t *testing.T) {
-	_, client := newTestServer(t)
-	if err := client.ClearEventLog(""); err != nil {
+	client := newTestServer(t)
+	if err := client.ClearEventLog(ctx, ""); err != nil {
 		t.Fatalf("ClearEventLog() error: %v", err)
 	}
 }
 
 func TestSetBiosAttribute(t *testing.T) {
-	_, client := newTestServer(t)
-	if err := client.SetBiosAttribute("", "BootMode", "Bios"); err != nil {
+	client := newTestServer(t)
+	if err := client.SetBiosAttribute(ctx, "", "BootMode", "Bios"); err != nil {
 		t.Fatalf("SetBiosAttribute() error: %v", err)
 	}
 }
 
 func TestNewClient_HTTPPrefix(t *testing.T) {
-	_, client := newTestServer(t)
-	// Just verify construction doesn't panic and GetServiceRoot works
-	// (URL has http:// prefix from httptest)
-	sr, err := client.GetServiceRoot()
+	client := newTestServer(t)
+	sr, err := client.GetServiceRoot(ctx)
 	if err != nil {
 		t.Fatalf("GetServiceRoot() with http:// prefix error: %v", err)
 	}

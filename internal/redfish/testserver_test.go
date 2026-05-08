@@ -114,30 +114,30 @@ var redfishFixtures = map[string]interface{}{
 		},
 	},
 	"/redfish/v1/Systems/1/Memory/DIMM1": redfish.MemoryModule{
-		ODataID:          "/redfish/v1/Systems/1/Memory/DIMM1",
-		ID:               "DIMM1",
-		Name:             "DIMM Slot 1",
-		MemoryType:       "DRAM",
-		MemoryDeviceType: "DDR4",
-		CapacityMiB:      32768,
+		ODataID:           "/redfish/v1/Systems/1/Memory/DIMM1",
+		ID:                "DIMM1",
+		Name:              "DIMM Slot 1",
+		MemoryType:        "DRAM",
+		MemoryDeviceType:  "DDR4",
+		CapacityMiB:       32768,
 		OperatingSpeedMhz: 3200,
-		Manufacturer:     "Samsung",
-		SerialNumber:     "MEM-001",
-		DeviceLocator:    "DIMM.Socket.A1",
-		Status:           redfish.Status{State: "Enabled", Health: "OK"},
+		Manufacturer:      "Samsung",
+		SerialNumber:      "MEM-001",
+		DeviceLocator:     "DIMM.Socket.A1",
+		Status:            redfish.Status{State: "Enabled", Health: "OK"},
 	},
 	"/redfish/v1/Systems/1/Memory/DIMM2": redfish.MemoryModule{
-		ODataID:          "/redfish/v1/Systems/1/Memory/DIMM2",
-		ID:               "DIMM2",
-		Name:             "DIMM Slot 2",
-		MemoryType:       "DRAM",
-		MemoryDeviceType: "DDR4",
-		CapacityMiB:      32768,
+		ODataID:           "/redfish/v1/Systems/1/Memory/DIMM2",
+		ID:                "DIMM2",
+		Name:              "DIMM Slot 2",
+		MemoryType:        "DRAM",
+		MemoryDeviceType:  "DDR4",
+		CapacityMiB:       32768,
 		OperatingSpeedMhz: 3200,
-		Manufacturer:     "Samsung",
-		SerialNumber:     "MEM-002",
-		DeviceLocator:    "DIMM.Socket.B1",
-		Status:           redfish.Status{State: "Enabled", Health: "OK"},
+		Manufacturer:      "Samsung",
+		SerialNumber:      "MEM-002",
+		DeviceLocator:     "DIMM.Socket.B1",
+		Status:            redfish.Status{State: "Enabled", Health: "OK"},
 	},
 	"/redfish/v1/Systems/1/Storage": redfish.Collection{
 		ODataID:      "/redfish/v1/Systems/1/Storage",
@@ -229,10 +229,10 @@ var redfishFixtures = map[string]interface{}{
 		Name:        "BIOS Configuration Current Settings",
 		Description: "BIOS Configuration",
 		Attributes: map[string]interface{}{
-			"BootMode":              "Uefi",
-			"ProcHyperthreading":    "Enabled",
-			"NumaNodesPerSocket":    2,
-			"ProcVirtualization":    "Enabled",
+			"BootMode":           "Uefi",
+			"ProcHyperthreading": "Enabled",
+			"NumaNodesPerSocket": 2,
+			"ProcVirtualization": "Enabled",
 		},
 	},
 	"/redfish/v1/Chassis": redfish.Collection{
@@ -256,10 +256,10 @@ var redfishFixtures = map[string]interface{}{
 				Status:                    redfish.Status{State: "Enabled", Health: "OK"},
 			},
 			{
-				Name:           "CPU1 Temp",
-				ReadingCelsius: 55.0,
+				Name:                   "CPU1 Temp",
+				ReadingCelsius:         55.0,
 				UpperThresholdCritical: 90.0,
-				Status:         redfish.Status{State: "Enabled", Health: "OK"},
+				Status:                 redfish.Status{State: "Enabled", Health: "OK"},
 			},
 		},
 		Fans: []redfish.Fan{
@@ -323,7 +323,7 @@ var redfishFixtures = map[string]interface{}{
 
 // newTestServer creates an httptest server that responds to Redfish paths
 // from redfishFixtures. POST/PATCH requests return 204.
-func newTestServer(t *testing.T) (*httptest.Server, *redfish.Client) {
+func newTestServer(t *testing.T) *redfish.Client {
 	t.Helper()
 	mux := http.NewServeMux()
 	for path, fixture := range redfishFixtures {
@@ -346,10 +346,9 @@ func newTestServer(t *testing.T) (*httptest.Server, *redfish.Client) {
 	srv := httptest.NewServer(mux)
 	t.Cleanup(srv.Close)
 
-	client := redfish.NewClient(redfish.Config{
+	return redfish.NewClient(redfish.Config{
 		Host:     srv.URL,
 		Username: "admin",
 		Password: "password",
 	})
-	return srv, client
 }

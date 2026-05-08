@@ -3,23 +3,24 @@ version: "2"
 linters:
   enable:
     - errcheck
-    - gosimple
     - govet
     - ineffassign
     - staticcheck
     - unused
     - bodyclose
-    - gofmt
-    - goimports
     - misspell
     - unconvert
     - unparam
-    - exhaustive
     - noctx
 
-linters-settings:
-  goimports:
-    local-prefixes: github.com/conallob/mcp-redfish
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/conallob/mcp-redfish
 
 issues:
   exclude-rules:

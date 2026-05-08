@@ -2,6 +2,7 @@ package redfish
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -54,8 +55,8 @@ func NewClient(cfg Config) *Client {
 }
 
 // get performs a GET request and decodes the JSON body into v.
-func (c *Client) get(path string, v interface{}) error {
-	req, err := http.NewRequest(http.MethodGet, c.baseURL+path, nil)
+func (c *Client) get(ctx context.Context, path string, v interface{}) error {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.baseURL+path, nil)
 	if err != nil {
 		return fmt.Errorf("building request: %w", err)
 	}
@@ -68,7 +69,7 @@ func (c *Client) get(path string, v interface{}) error {
 	if err != nil {
 		return fmt.Errorf("executing request GET %s: %w", path, err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		body, _ := io.ReadAll(resp.Body)
@@ -78,13 +79,13 @@ func (c *Client) get(path string, v interface{}) error {
 }
 
 // post performs a POST request, encoding body as JSON, and decodes the response into v (may be nil).
-func (c *Client) post(path string, body interface{}, v interface{}) error {
+func (c *Client) post(ctx context.Context, path string, body interface{}, v interface{}) error {
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return fmt.Errorf("encoding request body: %w", err)
 	}
 
-	req, err := http.NewRequest(http.MethodPost, c.baseURL+path, bytes.NewReader(buf))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+path, bytes.NewReader(buf))
 	if err != nil {
 		return fmt.Errorf("building request: %w", err)
 	}
@@ -98,7 +99,7 @@ func (c *Client) post(path string, body interface{}, v interface{}) error {
 	if err != nil {
 		return fmt.Errorf("executing request POST %s: %w", path, err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		body, _ := io.ReadAll(resp.Body)
@@ -111,13 +112,13 @@ func (c *Client) post(path string, body interface{}, v interface{}) error {
 }
 
 // patch performs a PATCH request encoding body as JSON.
-func (c *Client) patch(path string, body interface{}) error {
+func (c *Client) patch(ctx context.Context, path string, body interface{}) error {
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return fmt.Errorf("encoding request body: %w", err)
 	}
 
-	req, err := http.NewRequest(http.MethodPatch, c.baseURL+path, bytes.NewReader(buf))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPatch, c.baseURL+path, bytes.NewReader(buf))
 	if err != nil {
 		return fmt.Errorf("building request: %w", err)
 	}
@@ -131,7 +132,7 @@ func (c *Client) patch(path string, body interface{}) error {
 	if err != nil {
 		return fmt.Errorf("executing request PATCH %s: %w", path, err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		body, _ := io.ReadAll(resp.Body)
@@ -143,23 +144,23 @@ func (c *Client) patch(path string, body interface{}) error {
 // --- Service root ---
 
 // GetServiceRoot retrieves the Redfish service root.
-func (c *Client) GetServiceRoot() (*ServiceRoot, error) {
+func (c *Client) GetServiceRoot(ctx context.Context) (*ServiceRoot, error) {
 	var sr ServiceRoot
-	return &sr, c.get("/redfish/v1/", &sr)
+	return &sr, c.get(ctx, "/redfish/v1/", &sr)
 }
 
 // --- Systems ---
 
 // ListSystems returns all computer systems in the Systems collection.
-func (c *Client) ListSystems() ([]ComputerSystem, error) {
+func (c *Client) ListSystems(ctx context.Context) ([]ComputerSystem, error) {
 	var coll Collection
-	if err := c.get("/redfish/v1/Systems", &coll); err != nil {
+	if err := c.get(ctx, "/redfish/v1/Systems", &coll); err != nil {
 		return nil, err
 	}
 	systems := make([]ComputerSystem, 0, len(coll.Members))
 	for _, m := range coll.Members {
 		var sys ComputerSystem
-		if err := c.get(m.ODataID, &sys); err != nil {
+		if err := c.get(ctx, m.ODataID, &sys); err != nil {
 			return nil, fmt.Errorf("fetching system %s: %w", m.ODataID, err)
 		}
 		systems = append(systems, sys)
@@ -169,18 +170,18 @@ func (c *Client) ListSystems() ([]ComputerSystem, error) {
 
 // GetSystem retrieves the computer system at the given OData path.
 // If id is empty, it returns the first system in the collection.
-func (c *Client) GetSystem(id string) (*ComputerSystem, error) {
-	path, err := c.resolveSystemPath(id)
+func (c *Client) GetSystem(ctx context.Context, id string) (*ComputerSystem, error) {
+	path, err := c.resolveSystemPath(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 	var sys ComputerSystem
-	return &sys, c.get(path, &sys)
+	return &sys, c.get(ctx, path, &sys)
 }
 
 // resolveSystemPath returns the OData path for a system ID.
 // If id is empty, the first system in the collection is used.
-func (c *Client) resolveSystemPath(id string) (string, error) {
+func (c *Client) resolveSystemPath(ctx context.Context, id string) (string, error) {
 	if id != "" {
 		if strings.HasPrefix(id, "/") {
 			return id, nil
@@ -188,7 +189,7 @@ func (c *Client) resolveSystemPath(id string) (string, error) {
 		return "/redfish/v1/Systems/" + id, nil
 	}
 	var coll Collection
-	if err := c.get("/redfish/v1/Systems", &coll); err != nil {
+	if err := c.get(ctx, "/redfish/v1/Systems", &coll); err != nil {
 		return "", err
 	}
 	if len(coll.Members) == 0 {
@@ -198,23 +199,23 @@ func (c *Client) resolveSystemPath(id string) (string, error) {
 }
 
 // GetProcessors returns all processors for the given system.
-func (c *Client) GetProcessors(systemID string) ([]Processor, error) {
-	sysPath, err := c.resolveSystemPath(systemID)
+func (c *Client) GetProcessors(ctx context.Context, systemID string) ([]Processor, error) {
+	sysPath, err := c.resolveSystemPath(ctx, systemID)
 	if err != nil {
 		return nil, err
 	}
 	var sys ComputerSystem
-	if err := c.get(sysPath, &sys); err != nil {
+	if err := c.get(ctx, sysPath, &sys); err != nil {
 		return nil, err
 	}
 	var coll Collection
-	if err := c.get(sys.Processors.ODataID, &coll); err != nil {
+	if err := c.get(ctx, sys.Processors.ODataID, &coll); err != nil {
 		return nil, err
 	}
 	procs := make([]Processor, 0, len(coll.Members))
 	for _, m := range coll.Members {
 		var p Processor
-		if err := c.get(m.ODataID, &p); err != nil {
+		if err := c.get(ctx, m.ODataID, &p); err != nil {
 			return nil, fmt.Errorf("fetching processor %s: %w", m.ODataID, err)
 		}
 		procs = append(procs, p)
@@ -223,23 +224,23 @@ func (c *Client) GetProcessors(systemID string) ([]Processor, error) {
 }
 
 // GetMemory returns all memory modules for the given system.
-func (c *Client) GetMemory(systemID string) ([]MemoryModule, error) {
-	sysPath, err := c.resolveSystemPath(systemID)
+func (c *Client) GetMemory(ctx context.Context, systemID string) ([]MemoryModule, error) {
+	sysPath, err := c.resolveSystemPath(ctx, systemID)
 	if err != nil {
 		return nil, err
 	}
 	var sys ComputerSystem
-	if err := c.get(sysPath, &sys); err != nil {
+	if err := c.get(ctx, sysPath, &sys); err != nil {
 		return nil, err
 	}
 	var coll Collection
-	if err := c.get(sys.Memory.ODataID, &coll); err != nil {
+	if err := c.get(ctx, sys.Memory.ODataID, &coll); err != nil {
 		return nil, err
 	}
 	mods := make([]MemoryModule, 0, len(coll.Members))
 	for _, m := range coll.Members {
 		var mod MemoryModule
-		if err := c.get(m.ODataID, &mod); err != nil {
+		if err := c.get(ctx, m.ODataID, &mod); err != nil {
 			return nil, fmt.Errorf("fetching memory module %s: %w", m.ODataID, err)
 		}
 		mods = append(mods, mod)
@@ -248,23 +249,23 @@ func (c *Client) GetMemory(systemID string) ([]MemoryModule, error) {
 }
 
 // GetStorage returns all storage controllers (with their drives) for the given system.
-func (c *Client) GetStorage(systemID string) ([]StorageController, error) {
-	sysPath, err := c.resolveSystemPath(systemID)
+func (c *Client) GetStorage(ctx context.Context, systemID string) ([]StorageController, error) {
+	sysPath, err := c.resolveSystemPath(ctx, systemID)
 	if err != nil {
 		return nil, err
 	}
 	var sys ComputerSystem
-	if err := c.get(sysPath, &sys); err != nil {
+	if err := c.get(ctx, sysPath, &sys); err != nil {
 		return nil, err
 	}
 	var coll Collection
-	if err := c.get(sys.Storage.ODataID, &coll); err != nil {
+	if err := c.get(ctx, sys.Storage.ODataID, &coll); err != nil {
 		return nil, err
 	}
 	controllers := make([]StorageController, 0, len(coll.Members))
 	for _, m := range coll.Members {
 		var sc StorageController
-		if err := c.get(m.ODataID, &sc); err != nil {
+		if err := c.get(ctx, m.ODataID, &sc); err != nil {
 			return nil, fmt.Errorf("fetching storage controller %s: %w", m.ODataID, err)
 		}
 		controllers = append(controllers, sc)
@@ -273,29 +274,29 @@ func (c *Client) GetStorage(systemID string) ([]StorageController, error) {
 }
 
 // GetDrive retrieves a single drive by its OData path.
-func (c *Client) GetDrive(drivePath string) (*Drive, error) {
+func (c *Client) GetDrive(ctx context.Context, drivePath string) (*Drive, error) {
 	var d Drive
-	return &d, c.get(drivePath, &d)
+	return &d, c.get(ctx, drivePath, &d)
 }
 
 // GetNetworkInterfaces returns all network interfaces for the given system.
-func (c *Client) GetNetworkInterfaces(systemID string) ([]NetworkInterface, error) {
-	sysPath, err := c.resolveSystemPath(systemID)
+func (c *Client) GetNetworkInterfaces(ctx context.Context, systemID string) ([]NetworkInterface, error) {
+	sysPath, err := c.resolveSystemPath(ctx, systemID)
 	if err != nil {
 		return nil, err
 	}
 	var sys ComputerSystem
-	if err := c.get(sysPath, &sys); err != nil {
+	if err := c.get(ctx, sysPath, &sys); err != nil {
 		return nil, err
 	}
 	var coll Collection
-	if err := c.get(sys.NetworkInterfaces.ODataID, &coll); err != nil {
+	if err := c.get(ctx, sys.NetworkInterfaces.ODataID, &coll); err != nil {
 		return nil, err
 	}
 	nics := make([]NetworkInterface, 0, len(coll.Members))
 	for _, m := range coll.Members {
 		var nic NetworkInterface
-		if err := c.get(m.ODataID, &nic); err != nil {
+		if err := c.get(ctx, m.ODataID, &nic); err != nil {
 			return nil, fmt.Errorf("fetching network interface %s: %w", m.ODataID, err)
 		}
 		nics = append(nics, nic)
@@ -304,29 +305,29 @@ func (c *Client) GetNetworkInterfaces(systemID string) ([]NetworkInterface, erro
 }
 
 // GetThermal retrieves thermal sensor data from the first chassis.
-func (c *Client) GetThermal() (*Thermal, error) {
-	chassisPath, err := c.firstChassisPath()
+func (c *Client) GetThermal(ctx context.Context) (*Thermal, error) {
+	chassisPath, err := c.firstChassisPath(ctx)
 	if err != nil {
 		return nil, err
 	}
 	var thermal Thermal
-	return &thermal, c.get(chassisPath+"/Thermal", &thermal)
+	return &thermal, c.get(ctx, chassisPath+"/Thermal", &thermal)
 }
 
 // GetPower retrieves power data from the first chassis.
-func (c *Client) GetPower() (*Power, error) {
-	chassisPath, err := c.firstChassisPath()
+func (c *Client) GetPower(ctx context.Context) (*Power, error) {
+	chassisPath, err := c.firstChassisPath(ctx)
 	if err != nil {
 		return nil, err
 	}
 	var power Power
-	return &power, c.get(chassisPath+"/Power", &power)
+	return &power, c.get(ctx, chassisPath+"/Power", &power)
 }
 
 // firstChassisPath returns the OData path of the first chassis.
-func (c *Client) firstChassisPath() (string, error) {
+func (c *Client) firstChassisPath(ctx context.Context) (string, error) {
 	var coll Collection
-	if err := c.get("/redfish/v1/Chassis", &coll); err != nil {
+	if err := c.get(ctx, "/redfish/v1/Chassis", &coll); err != nil {
 		return "", err
 	}
 	if len(coll.Members) == 0 {
@@ -336,22 +337,21 @@ func (c *Client) firstChassisPath() (string, error) {
 }
 
 // GetEventLog returns log entries from the System log service.
-func (c *Client) GetEventLog(systemID string, limit int) ([]LogEntry, error) {
-	sysPath, err := c.resolveSystemPath(systemID)
+func (c *Client) GetEventLog(ctx context.Context, systemID string, limit int) ([]LogEntry, error) {
+	sysPath, err := c.resolveSystemPath(ctx, systemID)
 	if err != nil {
 		return nil, err
 	}
 	var sys ComputerSystem
-	if err := c.get(sysPath, &sys); err != nil {
+	if err := c.get(ctx, sysPath, &sys); err != nil {
 		return nil, err
 	}
-	// Discover log services and find the System log.
 	var logServicesColl Collection
-	if err := c.get(sys.LogServices.ODataID, &logServicesColl); err != nil {
+	if err := c.get(ctx, sys.LogServices.ODataID, &logServicesColl); err != nil {
 		return nil, err
 	}
 
-	// Find a log service called "System", "Log", or use the first one.
+	// Prefer a log service named "System" or "Log"; fall back to the first one.
 	logPath := ""
 	for _, m := range logServicesColl.Members {
 		if strings.Contains(m.ODataID, "System") || strings.Contains(m.ODataID, "Log") {
@@ -370,7 +370,7 @@ func (c *Client) GetEventLog(systemID string, limit int) ([]LogEntry, error) {
 		Members      []LogEntry `json:"Members"`
 		MembersCount int        `json:"Members@odata.count"`
 	}
-	if err := c.get(logPath+"/Entries", &entriesColl); err != nil {
+	if err := c.get(ctx, logPath+"/Entries", &entriesColl); err != nil {
 		return nil, err
 	}
 
@@ -384,15 +384,15 @@ func (c *Client) GetEventLog(systemID string, limit int) ([]LogEntry, error) {
 // --- Managers ---
 
 // ListManagers returns all managers (BMCs) in the system.
-func (c *Client) ListManagers() ([]Manager, error) {
+func (c *Client) ListManagers(ctx context.Context) ([]Manager, error) {
 	var coll Collection
-	if err := c.get("/redfish/v1/Managers", &coll); err != nil {
+	if err := c.get(ctx, "/redfish/v1/Managers", &coll); err != nil {
 		return nil, err
 	}
 	managers := make([]Manager, 0, len(coll.Members))
 	for _, m := range coll.Members {
 		var mgr Manager
-		if err := c.get(m.ODataID, &mgr); err != nil {
+		if err := c.get(ctx, m.ODataID, &mgr); err != nil {
 			return nil, fmt.Errorf("fetching manager %s: %w", m.ODataID, err)
 		}
 		managers = append(managers, mgr)
@@ -401,16 +401,16 @@ func (c *Client) ListManagers() ([]Manager, error) {
 }
 
 // GetManager retrieves a manager by ID. If id is empty, returns the first manager.
-func (c *Client) GetManager(id string) (*Manager, error) {
-	path, err := c.resolveManagerPath(id)
+func (c *Client) GetManager(ctx context.Context, id string) (*Manager, error) {
+	path, err := c.resolveManagerPath(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 	var mgr Manager
-	return &mgr, c.get(path, &mgr)
+	return &mgr, c.get(ctx, path, &mgr)
 }
 
-func (c *Client) resolveManagerPath(id string) (string, error) {
+func (c *Client) resolveManagerPath(ctx context.Context, id string) (string, error) {
 	if id != "" {
 		if strings.HasPrefix(id, "/") {
 			return id, nil
@@ -418,7 +418,7 @@ func (c *Client) resolveManagerPath(id string) (string, error) {
 		return "/redfish/v1/Managers/" + id, nil
 	}
 	var coll Collection
-	if err := c.get("/redfish/v1/Managers", &coll); err != nil {
+	if err := c.get(ctx, "/redfish/v1/Managers", &coll); err != nil {
 		return "", err
 	}
 	if len(coll.Members) == 0 {
@@ -428,59 +428,59 @@ func (c *Client) resolveManagerPath(id string) (string, error) {
 }
 
 // GetBios retrieves the BIOS resource for the given system.
-func (c *Client) GetBios(systemID string) (*Bios, error) {
-	sysPath, err := c.resolveSystemPath(systemID)
+func (c *Client) GetBios(ctx context.Context, systemID string) (*Bios, error) {
+	sysPath, err := c.resolveSystemPath(ctx, systemID)
 	if err != nil {
 		return nil, err
 	}
 	var sys ComputerSystem
-	if err := c.get(sysPath, &sys); err != nil {
+	if err := c.get(ctx, sysPath, &sys); err != nil {
 		return nil, err
 	}
 	var bios Bios
-	return &bios, c.get(sys.Bios.ODataID, &bios)
+	return &bios, c.get(ctx, sys.Bios.ODataID, &bios)
 }
 
 // --- Write operations ---
 
 // ResetSystem posts a reset action to the given system.
-func (c *Client) ResetSystem(systemID, resetType string) error {
-	sysPath, err := c.resolveSystemPath(systemID)
+func (c *Client) ResetSystem(ctx context.Context, systemID, resetType string) error {
+	sysPath, err := c.resolveSystemPath(ctx, systemID)
 	if err != nil {
 		return err
 	}
 	var sys ComputerSystem
-	if err := c.get(sysPath, &sys); err != nil {
+	if err := c.get(ctx, sysPath, &sys); err != nil {
 		return err
 	}
 	target := sys.Actions.Reset.Target
 	if target == "" {
 		target = sysPath + "/Actions/ComputerSystem.Reset"
 	}
-	return c.post(target, ResetRequest{ResetType: resetType}, nil)
+	return c.post(ctx, target, ResetRequest{ResetType: resetType}, nil)
 }
 
 // SetIndicatorLED patches the IndicatorLED field on the given system.
-func (c *Client) SetIndicatorLED(systemID, state string) error {
-	sysPath, err := c.resolveSystemPath(systemID)
+func (c *Client) SetIndicatorLED(ctx context.Context, systemID, state string) error {
+	sysPath, err := c.resolveSystemPath(ctx, systemID)
 	if err != nil {
 		return err
 	}
-	return c.patch(sysPath, IndicatorLEDRequest{IndicatorLED: state})
+	return c.patch(ctx, sysPath, IndicatorLEDRequest{IndicatorLED: state})
 }
 
 // ClearEventLog posts a ClearLog action to the System log service.
-func (c *Client) ClearEventLog(systemID string) error {
-	sysPath, err := c.resolveSystemPath(systemID)
+func (c *Client) ClearEventLog(ctx context.Context, systemID string) error {
+	sysPath, err := c.resolveSystemPath(ctx, systemID)
 	if err != nil {
 		return err
 	}
 	var sys ComputerSystem
-	if err := c.get(sysPath, &sys); err != nil {
+	if err := c.get(ctx, sysPath, &sys); err != nil {
 		return err
 	}
 	var logServicesColl Collection
-	if err := c.get(sys.LogServices.ODataID, &logServicesColl); err != nil {
+	if err := c.get(ctx, sys.LogServices.ODataID, &logServicesColl); err != nil {
 		return err
 	}
 	logPath := ""
@@ -496,21 +496,21 @@ func (c *Client) ClearEventLog(systemID string) error {
 	if logPath == "" {
 		return fmt.Errorf("no log service found")
 	}
-	return c.post(logPath+"/Actions/LogService.ClearLog", struct{}{}, nil)
+	return c.post(ctx, logPath+"/Actions/LogService.ClearLog", struct{}{}, nil)
 }
 
 // SetBiosAttribute patches a single BIOS attribute on the given system.
-func (c *Client) SetBiosAttribute(systemID, key string, value interface{}) error {
-	sysPath, err := c.resolveSystemPath(systemID)
+func (c *Client) SetBiosAttribute(ctx context.Context, systemID, key string, value interface{}) error {
+	sysPath, err := c.resolveSystemPath(ctx, systemID)
 	if err != nil {
 		return err
 	}
 	var sys ComputerSystem
-	if err := c.get(sysPath, &sys); err != nil {
+	if err := c.get(ctx, sysPath, &sys); err != nil {
 		return err
 	}
 	biosSettingsPath := sys.Bios.ODataID + "/Settings"
-	return c.patch(biosSettingsPath, SetAttributesRequest{
+	return c.patch(ctx, biosSettingsPath, SetAttributesRequest{
 		Attributes: map[string]interface{}{key: value},
 	})
 }
