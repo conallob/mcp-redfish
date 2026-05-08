@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
@@ -22,6 +23,7 @@ func main() {
 		password    = flag.String("password", envOr("REDFISH_PASSWORD", ""), "BMC password")
 		insecure    = flag.Bool("insecure", envBool("REDFISH_INSECURE"), "Skip TLS certificate verification")
 		readOnly    = flag.Bool("read-only", envBool("REDFISH_READ_ONLY"), "Restrict to read-only tools only")
+		solURL      = flag.String("sol-url", envOr("REDFISH_SOL_URL", ""), "WebSocket URL for Serial-over-LAN console (e.g. wss://bmc-host/console)")
 		showVersion = flag.Bool("version", false, "Print version and exit")
 	)
 	flag.Parse()
@@ -37,22 +39,31 @@ func main() {
 		os.Exit(1)
 	}
 
-	client := redfish.NewClient(redfish.Config{
+	cfg := redfish.Config{
 		Host:     *host,
 		Username: *username,
 		Password: *password,
 		Insecure: *insecure,
-	})
+	}
+	client := redfish.NewClient(cfg)
+
+	var sol *redfish.SOLClient
+	if *solURL != "" {
+		sol = redfish.NewSOLClient(cfg, *solURL)
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		sol.Start(ctx)
+	}
 
 	s := server.NewMCPServer("mcp-redfish", version)
-	tools.Register(s, client, *readOnly)
+	tools.Register(s, client, sol, *readOnly)
 
 	if err := server.ServeStdio(s); err != nil {
 		log.Fatalf("server error: %v", err)
 	}
 }
 
-func envOr(key, def string) string {
+func envOr(key, def string) string { //nolint:unparam
 	if v := os.Getenv(key); v != "" {
 		return v
 	}

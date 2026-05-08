@@ -192,9 +192,15 @@ func newToolTestServer(t *testing.T) *redfish.Client {
 // callTool invokes a registered tool on a fresh MCPServer with the given args.
 func callTool(t *testing.T, toolName string, args map[string]interface{}, readOnly bool) *mcp.CallToolResult {
 	t.Helper()
+	return callToolWithSOL(t, toolName, args, readOnly, nil)
+}
+
+// callToolWithSOL is like callTool but also wires up a SOL client.
+func callToolWithSOL(t *testing.T, toolName string, args map[string]interface{}, readOnly bool, sol *redfish.SOLClient) *mcp.CallToolResult {
+	t.Helper()
 	client := newToolTestServer(t)
 	s := server.NewMCPServer("test", "0.0.0")
-	tools.Register(s, client, readOnly)
+	tools.Register(s, client, sol, readOnly)
 
 	st := s.GetTool(toolName)
 	if st == nil {
@@ -331,6 +337,54 @@ func TestTool_SetBiosAttribute(t *testing.T) {
 	assertContains(t, result, "BootMode")
 }
 
+// --- Serial console tool tests ---
+
+func TestTool_GetConsoleStatus_NotConfigured(t *testing.T) {
+	result := callTool(t, "redfish_get_console_status", nil, false)
+	assertToolSuccess(t, result)
+	assertContains(t, result, "not configured")
+}
+
+func TestTool_GetConsoleOutput_NotConfigured(t *testing.T) {
+	result := callTool(t, "redfish_get_console_output", nil, false)
+	if !result.IsError {
+		t.Fatal("expected error result when SOL not configured")
+	}
+	assertContains(t, result, "not configured")
+}
+
+func TestTool_GetConsoleOutput_WithData(t *testing.T) {
+	sol := newPreloadedSOL([]string{"boot start", "kernel loaded", "login:"})
+	result := callToolWithSOL(t, "redfish_get_console_output", nil, false, sol)
+	assertToolSuccess(t, result)
+	assertContains(t, result, "kernel loaded")
+}
+
+func TestTool_GetConsoleStatus_WithData(t *testing.T) {
+	sol := newPreloadedSOL([]string{"line1", "line2"})
+	result := callToolWithSOL(t, "redfish_get_console_status", nil, false, sol)
+	assertToolSuccess(t, result)
+	assertContains(t, result, "connected")
+}
+
+func TestTool_ConsoleTools_RegisteredInReadOnlyMode(t *testing.T) {
+	for _, name := range []string{"redfish_get_console_status", "redfish_get_console_output"} {
+		t.Run(name, func(t *testing.T) {
+			client := newToolTestServer(t)
+			s := server.NewMCPServer("test", "0.0.0")
+			tools.Register(s, client, nil, true /* readOnly */)
+			if s.GetTool(name) == nil {
+				t.Errorf("console tool %q should be registered in read-only mode", name)
+			}
+		})
+	}
+}
+
+// newPreloadedSOL returns a connected SOL client with lines already in the buffer.
+func newPreloadedSOL(lines []string) *redfish.SOLClient {
+	return redfish.NewPreloadedSOLClient(lines)
+}
+
 // --- Read-only mode tests ---
 
 func TestReadOnlyMode_ExcludesWriteTools(t *testing.T) {
@@ -344,7 +398,7 @@ func TestReadOnlyMode_ExcludesWriteTools(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			client := newToolTestServer(t)
 			s := server.NewMCPServer("test", "0.0.0")
-			tools.Register(s, client, true /* readOnly */)
+			tools.Register(s, client, nil, true /* readOnly */)
 
 			if st := s.GetTool(name); st != nil {
 				t.Errorf("write tool %q should not be registered in read-only mode", name)
@@ -354,7 +408,7 @@ func TestReadOnlyMode_ExcludesWriteTools(t *testing.T) {
 }
 
 func TestReadOnlyMode_AllowsReadTools(t *testing.T) {
-	result := callTool(t, "redfish_get_system", nil, true /* readOnly */)
+	result := callTool(t, "redfish_get_system", nil, true)
 	assertToolSuccess(t, result)
 }
 
